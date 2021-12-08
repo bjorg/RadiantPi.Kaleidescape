@@ -19,7 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +45,14 @@ namespace RadiantPi.Kaleidescape {
         //--- Constants ---
         private static Regex _highlightedSelectionRegex = new(@"^#.+/!/000:HIGHLIGHTED_SELECTION:(?<selectionId>[^:]+):", RegexOptions.Compiled);
         private static Regex _responseRegex = new("01/(?<sequenceId>[0-9])/000:(?<message>[^:]+):(?<data>.+):/");
+
+        //--- Class Fields ---
+        private static readonly JsonSerializerOptions g_jsonSerializerOptions = new() {
+            WriteIndented = true,
+            Converters = {
+                new JsonStringEnumConverter()
+            }
+        };
 
         //--- Class Methods ---
         private static string[] DecodeData(string data) {
@@ -160,126 +171,129 @@ namespace RadiantPi.Kaleidescape {
             _telnet.Dispose();
         }
 
-        public async Task<ContentDetails> GetContentDetailsAsync(string handle, CancellationToken cancellationToken = default) {
+        public Task<ContentDetails> GetContentDetailsAsync(string handle, CancellationToken cancellationToken = default) {
             CheckNotDisposed();
+            return LogRequestResponse(handle, async () => {
 
-            // get a new sequence id for request
-            var sequenceId = Interlocked.Increment(ref _sequenceId) % 10;
+                // TODO (2021-12-08, bjorg): use `cancellationToken` to cancel operation
 
-            // send query and collect responses
-            TaskCompletionSource responseSource = new();
-            ContentDetails result = new();
-            _telnet.MessageReceived += ReadResponse;
-            try {
-                await _telnet.SendAsync($"01/{sequenceId}/GET_CONTENT_DETAILS:{handle}::\r").ConfigureAwait(false);
-                await responseSource.Task.ConfigureAwait(false);
-            } finally {
-                _telnet.MessageReceived -= ReadResponse;
-            }
-            return result;
+                // get a new sequence id for request
+                var sequenceId = Interlocked.Increment(ref _sequenceId) % 10;
 
-            // local functions
-            void ReadResponse(object? sender, TelnetMessageReceivedEventArgs args) {
-
-                // NOTE (2021-12-07, bjorg): Kaleidescape sends multiple responses for a request that need to be assembled together.
+                // send query and collect responses
+                TaskCompletionSource responseSource = new();
+                ContentDetails result = new();
+                _telnet.MessageReceived += ReadResponse;
                 try {
-                    var match = _responseRegex.Match(args.Message);
-                    if(
-                        match.Success
-                        && int.TryParse(match.Groups["sequenceId"].Value, out var responseSequenceId)
-                        && (responseSequenceId == sequenceId)
-                    ) {
-                        var message = match.Groups["message"].Value;
-                        var data = match.Groups["data"].Value;
-                        if(message == "CONTENT_DETAILS_OVERVIEW") {
+                    await _telnet.SendAsync($"01/{sequenceId}/GET_CONTENT_DETAILS:{handle}::\r").ConfigureAwait(false);
+                    await responseSource.Task.ConfigureAwait(false);
+                } finally {
+                    _telnet.MessageReceived -= ReadResponse;
+                }
+                return result;
 
-                            // ignore; nothing further to do
-                        } else if(message == "CONTENT_DETAILS") {
-                            var fields = DecodeData(data);
-                            if(fields.Length == 3) {
-                                switch(fields[1]) {
-                                case "Content_handle":
-                                    result.Handle = fields[2];
-                                    break;
-                                case "Title":
-                                    result.Title = fields[2];
-                                    break;
-                                case "Cover_URL":
-                                    result.CoverUrl = fields[2];
-                                    break;
-                                case "HiRes_cover_URL":
-                                    result.HiResCoverUrl = fields[2];
-                                    break;
-                                case "Rating":
-                                    result.Rating = fields[2];
-                                    break;
-                                case "Rating_reason":
-                                    result.RatingReason = fields[2];
-                                    break;
-                                case "Year":
-                                    result.Year = fields[2];
-                                    break;
-                                case "Running_time":
-                                    result.RunningTime = fields[2];
-                                    break;
-                                case "Actors":
-                                    result.Actors = fields[2];
-                                    break;
-                                case "Director":
-                                    result.Director = fields[2];
-                                    break;
-                                case "Directors":
-                                    result.Directors = fields[2];
-                                    break;
-                                case "Genre":
-                                    result.Genre = fields[2];
-                                    break;
-                                case "Genres":
-                                    result.Genres = fields[2];
-                                    break;
-                                case "Synopsis":
-                                    result.Synopsis = fields[2];
-                                    break;
-                                case "Color_description":
-                                    result.ColorDescription = fields[2];
-                                    break;
-                                case "Country":
-                                    result.Country = fields[2];
-                                    break;
-                                case "Aspect_ratio":
-                                    result.AspectRatio = fields[2];
-                                    break;
-                                case "Disc_location":
-                                    result.DiscLocation = fields[2];
+                // local functions
+                void ReadResponse(object? sender, TelnetMessageReceivedEventArgs args) {
 
-                                    // this is the last field received; indicate response is done
-                                    responseSource.SetResult();
-                                    break;
-                                default:
-                                    throw new KaleidescapeResponseException($"Unexpected field for CONTENT_DETAILS: '{fields[1]}' = '{fields[2]}'");
+                    // NOTE (2021-12-08, bjorg): Kaleidescape sends multiple responses for a request that need to be assembled together.
+                    try {
+                        var match = _responseRegex.Match(args.Message);
+                        if(
+                            match.Success
+                            && int.TryParse(match.Groups["sequenceId"].Value, out var responseSequenceId)
+                            && (responseSequenceId == sequenceId)
+                        ) {
+                            var message = match.Groups["message"].Value;
+                            var data = match.Groups["data"].Value;
+                            if(message == "CONTENT_DETAILS_OVERVIEW") {
+
+                                // ignore; nothing further to do
+                            } else if(message == "CONTENT_DETAILS") {
+                                var fields = DecodeData(data);
+                                if(fields.Length == 3) {
+                                    switch(fields[1]) {
+                                    case "Content_handle":
+                                        result.Handle = fields[2];
+                                        break;
+                                    case "Title":
+                                        result.Title = fields[2];
+                                        break;
+                                    case "Cover_URL":
+                                        result.CoverUrl = fields[2];
+                                        break;
+                                    case "HiRes_cover_URL":
+                                        result.HiResCoverUrl = fields[2];
+                                        break;
+                                    case "Rating":
+                                        result.Rating = fields[2];
+                                        break;
+                                    case "Rating_reason":
+                                        result.RatingReason = fields[2];
+                                        break;
+                                    case "Year":
+                                        result.Year = fields[2];
+                                        break;
+                                    case "Running_time":
+                                        result.RunningTime = fields[2];
+                                        break;
+                                    case "Actors":
+                                        result.Actors = fields[2];
+                                        break;
+                                    case "Director":
+                                        result.Director = fields[2];
+                                        break;
+                                    case "Directors":
+                                        result.Directors = fields[2];
+                                        break;
+                                    case "Genre":
+                                        result.Genre = fields[2];
+                                        break;
+                                    case "Genres":
+                                        result.Genres = fields[2];
+                                        break;
+                                    case "Synopsis":
+                                        result.Synopsis = fields[2];
+                                        break;
+                                    case "Color_description":
+                                        result.ColorDescription = fields[2];
+                                        break;
+                                    case "Country":
+                                        result.Country = fields[2];
+                                        break;
+                                    case "Aspect_ratio":
+                                        result.AspectRatio = fields[2];
+                                        break;
+                                    case "Disc_location":
+                                        result.DiscLocation = fields[2];
+
+                                        // this is the last field received; indicate response is done
+                                        responseSource.SetResult();
+                                        break;
+                                    default:
+                                        throw new KaleidescapeResponseException($"Unexpected field for CONTENT_DETAILS: '{fields[1]}' = '{fields[2]}'");
+                                    }
+                                } else {
+                                    throw new KaleidescapeResponseException($"Unexpected format for CONTENT_DETAILS: '{data}' ({fields.Length:N0} fields)");
                                 }
                             } else {
-                                throw new KaleidescapeResponseException($"Unexpected format for CONTENT_DETAILS: '{data}' ({fields.Length:N0} fields)");
+                                throw new KaleidescapeResponseException($"Unrecognized message: '{message}' (data: '{data}')");
                             }
-                        } else {
-                            throw new KaleidescapeResponseException($"Unrecognized message: '{message}' (data: '{data}')");
                         }
+                    } catch(Exception e) {
+                        responseSource.SetException(e);
                     }
-                } catch(Exception e) {
-                    responseSource.SetException(e);
                 }
-            }
+            });
         }
 
         private async Task ValidateConnectionAsync(ITelnet client, TextReader reader, TextWriter writer) {
-            Logger?.LogDebug("Kaleidescape connection established");
+            Logger?.LogInformation("Kaleidescape connection established");
 
             // enable events for connection
             await writer.WriteLineAsync($"01/1/ENABLE_EVENTS:#{_deviceId}:").ConfigureAwait(false);
         }
 
         private void MessageReceived(object? sender, TelnetMessageReceivedEventArgs args) {
-            Logger?.LogDebug($"Received: {args.Message}");
 
             // check if message is a highlighted selection event
             var highlightedSelectionMatch = _highlightedSelectionRegex.Match(args.Message);
@@ -294,6 +308,20 @@ namespace RadiantPi.Kaleidescape {
             if(_disposed) {
                 throw new ObjectDisposedException("client was disposed");
             }
+        }
+
+        private void LogDebugJson(string message, object? response) {
+            if(Logger?.IsEnabled(LogLevel.Debug) ?? false) {
+                var serializedResponse = JsonSerializer.Serialize(response, g_jsonSerializerOptions);
+                Logger?.LogDebug($"{message}: {serializedResponse}");
+            }
+        }
+
+        private async Task<TResult> LogRequestResponse<TResult, TParameter>(TParameter parameter, Func<Task<TResult>> callback, [CallerMemberName] string methodName = "") {
+            Logger?.LogDebug($"{methodName} request: {parameter}");
+            var response = await callback().ConfigureAwait(false);
+            LogDebugJson($"{methodName} response", response);
+            return response;
         }
     }
 }
