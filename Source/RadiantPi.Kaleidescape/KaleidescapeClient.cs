@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -131,7 +132,7 @@ namespace RadiantPi.Kaleidescape {
         //--- Fields ---
         private readonly ITelnet _telnet;
         private readonly string _deviceId;
-        private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
+        private readonly ConcurrentDictionary<string, ContentDetails> _contentDetailsCache = new();
         private int _sequenceId;
         private bool _disposed;
 
@@ -167,7 +168,6 @@ namespace RadiantPi.Kaleidescape {
             }
             _disposed = true;
             _telnet.MessageReceived -= MessageReceived;
-            _mutex.Dispose();
             _telnet.Dispose();
         }
 
@@ -177,12 +177,17 @@ namespace RadiantPi.Kaleidescape {
 
                 // TODO (2021-12-08, bjorg): use `cancellationToken` to cancel operation
 
+                // check if cache contains a response already
+                if(_contentDetailsCache.TryGetValue(handle, out var result)) {
+                    return result;
+                }
+
                 // get a new sequence id for request
                 var sequenceId = Interlocked.Increment(ref _sequenceId) % 10;
 
                 // send query and collect responses
                 TaskCompletionSource responseSource = new();
-                ContentDetails result = new();
+                result = new();
                 _telnet.MessageReceived += ReadResponse;
                 try {
                     await _telnet.SendAsync($"01/{sequenceId}/GET_CONTENT_DETAILS:{handle}::\r").ConfigureAwait(false);
@@ -190,6 +195,7 @@ namespace RadiantPi.Kaleidescape {
                 } finally {
                     _telnet.MessageReceived -= ReadResponse;
                 }
+                _contentDetailsCache[handle] = result;
                 return result;
 
                 // local functions
