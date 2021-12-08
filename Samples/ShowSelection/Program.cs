@@ -24,12 +24,13 @@ if(args.Length != 1) {
     Console.WriteLine("ERROR: missing Device ID as commandline argument");
     return;
 }
+var deviceId = args[0];
 
 // initialize client
 using var client = new KaleidescapeClient(new() {
     Host = "192.168.1.147",
     Port = 10000,
-    DeviceId = args[0]
+    DeviceId = deviceId
 });
 
 // hook-up event handlers
