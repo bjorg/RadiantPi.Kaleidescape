@@ -17,19 +17,19 @@
  */
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using RadiantPi.Kaleidescape.Model;
 
 namespace RadiantPi.Kaleidescape {
 
-    public interface IKaleidescape : IDisposable {
+    public abstract class AKaleidescapeException : Exception {
 
-        //--- Events ---
-        event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
+        //--- Constructors ---
+        protected AKaleidescapeException(string? message) : base(message) { }
+        protected AKaleidescapeException(string? message, Exception? innerException) : base(message, innerException) { }
+    }
 
-        //--- Methods ---
-        Task ConnectAsync();
-        Task<ContentDetails> GetContentDetailsAsync(string handle, CancellationToken cancellationToken = default);
+    public class KaleidescapeResponseException : AKaleidescapeException {
+
+        //--- Constructors ---
+        public KaleidescapeResponseException(string? message) : base(message) { }
     }
 }
