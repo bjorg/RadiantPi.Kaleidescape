@@ -48,6 +48,7 @@ namespace RadiantPi.Kaleidescape {
         private static Regex _responseRegex = new("01/(?<sequenceId>[0-9])/000:(?<message>[^:]+):(?<data>.+):/");
 
         //--- Class Fields ---
+        private static readonly Encoding g_latin1Encoding = Encoding.GetEncoding("iso-8859-1");
         private static readonly JsonSerializerOptions g_jsonSerializerOptions = new() {
             WriteIndented = true,
             Converters = {
@@ -107,7 +108,7 @@ namespace RadiantPi.Kaleidescape {
                         i += 2;
 
                         // append character code using Latin-1 codepage
-                        buffer.Append(Encoding.GetEncoding(1252).GetChars(new byte[] { (byte)characterCode }));
+                        buffer.Append(g_latin1Encoding.GetChars(new byte[] { (byte)characterCode }));
                         break;
                     default:
                         throw new ArgumentException("Invalid data value: escape character (\\) is followed by an illegal character");
