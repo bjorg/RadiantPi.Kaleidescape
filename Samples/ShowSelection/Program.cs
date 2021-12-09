@@ -19,12 +19,11 @@
 using System;
 using RadiantPi.Kaleidescape;
 
-// check arguments
-if(args.Length != 1) {
-    Console.WriteLine("ERROR: missing Device ID as commandline argument");
-    return;
+// see if there is an environment variable for Kaleidescape player serial number or prompt for it
+var deviceId = Environment.GetEnvironmentVariable("KPLAYER_SERIAL_NUMBER");
+if(string.IsNullOrEmpty(deviceId)) {
+    deviceId = AnsiConsole.Ask<string>("Enter Kaleidescape Player Serial Number:");
 }
-var deviceId = args[0];
 
 // initialize client
 using var client = new KaleidescapeClient(new() {

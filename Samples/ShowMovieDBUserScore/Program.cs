@@ -19,15 +19,20 @@
 using System;
 using System.Linq;
 using RadiantPi.Kaleidescape;
+using Spectre.Console;
 using TMDbLib.Client;
 
-// check arguments
-if(args.Length != 2) {
-    Console.WriteLine("ERROR: missing Device ID and/or MovieDB API Key as commandline argument");
-    return;
+// see if there is an environment variable for Kaleidescape player serial number or prompt for it
+var deviceId = Environment.GetEnvironmentVariable("KPLAYER_SERIAL_NUMBER");
+if(string.IsNullOrEmpty(deviceId)) {
+    deviceId = AnsiConsole.Ask<string>("Enter Kaleidescape Player Serial Number:");
 }
-var deviceId = args[0];
-var movieDbApiKey = args[1];
+
+// see if there is an environment variable for TheMovieDB API key or prompt for it
+var movieDbApiKey = Environment.GetEnvironmentVariable("TMDB_APIKEY");
+if(string.IsNullOrEmpty(movieDbApiKey)) {
+    movieDbApiKey = AnsiConsole.Prompt(new TextPrompt<string>("Enter TheMovieDB API key (or leave blank):").AllowEmpty());
+}
 
 // initialize clients
 using KaleidescapeClient kaleidescapeClient = new(new() {
@@ -35,7 +40,9 @@ using KaleidescapeClient kaleidescapeClient = new(new() {
     Port = 10000,
     DeviceId = deviceId
 });
-using TMDbClient movieDbClient = new(movieDbApiKey);
+TMDbClient? movieDbClient = string.IsNullOrEmpty(movieDbApiKey)
+    ? null
+    : new(movieDbApiKey);
 
 // hook-up event handlers
 kaleidescapeClient.HighlightedSelectionChanged += async delegate (object? sender, HighlightedSelectionChangedEventArgs args) {
@@ -45,12 +52,20 @@ kaleidescapeClient.HighlightedSelectionChanged += async delegate (object? sender
             !string.IsNullOrEmpty(details.Title)
             && int.TryParse(details.Year, out var year)
         ) {
-            var searchResults = await movieDbClient.SearchMovieAsync(details.Title, year: year);
-            if(searchResults.Results.Any()) {
-                var first = searchResults.Results.First();
-                Console.WriteLine($"{details.Title} ({details.Year}) --> {first.Title} ({first.ReleaseDate?.Year.ToString() ?? "N/A"}): {first.VoteAverage:0.00} ({first.VoteCount:N0} votes)");
+
+            // check if TheMovieDB client is initialized
+            if(movieDbClient is not null) {
+                var searchResults = await movieDbClient.SearchMovieAsync(details.Title, year: year);
+                if(searchResults.Results.Any()) {
+                    var first = searchResults.Results.First();
+
+                    // show the Kaleidescape title and the matched title, just in case they don't line up
+                    Console.WriteLine($"{details.Title} ({details.Year}) --> {first.Title} ({first.ReleaseDate?.Year.ToString() ?? "N/A"}): {first.VoteAverage:0.00} ({first.VoteCount:N0} votes)");
+                } else {
+                    Console.WriteLine($"Could not find record for: {details.Title} ({details.Year})");
+                }
             } else {
-                Console.WriteLine($"Could not find record for: {details.Title} ({details.Year})");
+                Console.WriteLine($"Selected {details.Title} ({details.Year})");
             }
         } else {
             Console.WriteLine($"Insufficient information to display user votes");
