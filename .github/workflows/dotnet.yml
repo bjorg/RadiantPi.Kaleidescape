@@ -1,0 +1,38 @@
+name: Publish Package
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      # Build RadiantPi.Kaleidescape
+      - name: Restore dependencies
+        run: dotnet restore Source/RadiantPi.Kaleidescape/RadiantPi.Kaleidescape.csproj
+      - name: Build
+        run: dotnet build --no-restore Source/RadiantPi.Kaleidescape/RadiantPi.Kaleidescape.csproj
+
+      # Build Samples
+      - name: Build Show Selection Sample
+        run: dotnet build Samples/ShowSelection/ShowSelection.csproj
+      - name: Build Show MovieDB User Score Sample
+        run: dotnet build Samples/ShowMovieDBUserScore/ShowMovieDBUserScore.csproj
+
+      # Publish RadiantPi.Kaleidescape
+      - name: Publish
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: brandedoutcast/publish-nuget@v2.5.5
+        with:
+            PROJECT_FILE_PATH: Source/RadiantPi.Kaleidescape/RadiantPi.Kaleidescape.csproj
+            NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
