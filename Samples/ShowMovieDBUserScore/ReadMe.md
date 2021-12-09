@@ -29,9 +29,7 @@ using KaleidescapeClient kaleidescapeClient = new(new() {
     Port = 10000,
     DeviceId = deviceId
 });
-TMDbClient? movieDbClient = string.IsNullOrEmpty(movieDbApiKey)
-    ? null
-    : new(movieDbApiKey);
+TMDbClient movieDbClient = new(movieDbApiKey);
 
 // hook-up event handlers
 kaleidescapeClient.HighlightedSelectionChanged += async delegate (object? sender, HighlightedSelectionChangedEventArgs args) {
