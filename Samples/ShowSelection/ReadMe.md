@@ -1,21 +1,10 @@
-﻿/*
- * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2021 - Steve G. Bjorg
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Affero General Public License along
- * with this program. If not, see <https://www.gnu.org/licenses/>.
- */
+# RadiantPi.Kaleidescape - ShowSelection
 
+Show movie details for highlighted selection.
+
+## Code
+
+```csharp
 using System;
 using RadiantPi.Kaleidescape;
 using Spectre.Console;
@@ -45,3 +34,21 @@ await client.ConnectAsync();
 // wait for exit
 Console.WriteLine("Connected to Kaleidescape. Press ENTER to exit.");
 Console.ReadLine();
+```
+
+## Output
+
+```
+Connected to Kaleidescape. Press ENTER to exit.
+=> The Mummy: Tomb of the Dragon Emperor (2008) [26-0.0-S_c44e532c]
+=> Murder on the Orient Express (2017) [26-0.0-S_c44e8fd1]
+=> Mutiny on the Bounty (1962) [26-0.0-S_ff304478]
+=> My Fair Lady (1964) [26-0.0-S_c4458748]
+=> My Name Is Nobody (1974) [26-0.0-S_c4514898]
+=> National Lampoon's Van Wilder (2002) [26-0.0-S_c44c2ee5]
+=> National Treasure (2004) [26-0.0-S_c445c6f9]
+=> The Natural (1984) [26-0.0-S_c44a365d]
+=> Need for Speed (2014) [26-0.0-S_c459aabd]
+=> Neil Cowley Trio: Live at Montreux (2012) [26-0.0-S_c44f80d6]
+=> Nerve (2016) [26-0.0-S_c4525aea]
+```

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -154,7 +155,7 @@ namespace RadiantPi.Kaleidescape {
             _telnet = telnet ?? throw new ArgumentNullException(nameof(telnet));
             _telnet.ValidateConnectionAsync = ValidateConnectionAsync;
             _telnet.MessageReceived += MessageReceived;
-            _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
+            _deviceId = string.Concat((deviceId ?? throw new ArgumentNullException(nameof(deviceId))).Where(c => !Char.IsWhiteSpace(c)));
         }
 
         //---  Properties ---
@@ -202,7 +203,7 @@ namespace RadiantPi.Kaleidescape {
                 // local functions
                 void ReadResponse(object? sender, TelnetMessageReceivedEventArgs args) {
 
-                    // NOTE (2021-12-08, bjorg): Kaleidescape sends multiple responses for a request that need to be assembled together.
+                    // NOTE (2021-12-08, bjorg): Kaleidescape sends multiple responses that need to be assembled together.
                     try {
                         var match = _responseRegex.Match(args.Message);
                         if(
