@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2021 - Steve G. Bjorg
+ * Copyright (C) 2020-2022 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -16,17 +16,14 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System;
+namespace RadiantPi.Kaleidescape;
 
-namespace RadiantPi.Kaleidescape {
+public sealed class HighlightedSelectionChangedEventArgs : EventArgs {
 
-    public sealed class HighlightedSelectionChangedEventArgs : EventArgs {
+    //--- Constructors ---
+    public HighlightedSelectionChangedEventArgs(string id)
+        => SelectionId = id ?? throw new ArgumentNullException(nameof(id));
 
-        //--- Constructors ---
-        public HighlightedSelectionChangedEventArgs(string id)
-            => SelectionId = id ?? throw new ArgumentNullException(nameof(id));
-
-        //--- Properties ---
-        public string SelectionId { get; }
-    }
+    //--- Properties ---
+    public string SelectionId { get; }
 }

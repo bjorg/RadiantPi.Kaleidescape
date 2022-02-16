@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2021 - Steve G. Bjorg
+ * Copyright (C) 2020-2022 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -16,20 +16,17 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+
+namespace RadiantPi.Kaleidescape;
+
 using RadiantPi.Kaleidescape.Model;
 
-namespace RadiantPi.Kaleidescape {
+public interface IKaleidescape : IDisposable {
 
-    public interface IKaleidescape : IDisposable {
+    //--- Events ---
+    event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
 
-        //--- Events ---
-        event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
-
-        //--- Methods ---
-        Task ConnectAsync();
-        Task<ContentDetails> GetContentDetailsAsync(string handle, CancellationToken cancellationToken = default);
-    }
+    //--- Methods ---
+    Task ConnectAsync();
+    Task<ContentDetails> GetContentDetailsAsync(string handle, CancellationToken cancellationToken = default);
 }
