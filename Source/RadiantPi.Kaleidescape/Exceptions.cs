@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2021 - Steve G. Bjorg
+ * Copyright (C) 2020-2022 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -16,20 +16,17 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System;
+namespace RadiantPi.Kaleidescape;
 
-namespace RadiantPi.Kaleidescape {
+public abstract class AKaleidescapeException : Exception {
 
-    public abstract class AKaleidescapeException : Exception {
+    //--- Constructors ---
+    protected AKaleidescapeException(string? message) : base(message) { }
+    protected AKaleidescapeException(string? message, Exception? innerException) : base(message, innerException) { }
+}
 
-        //--- Constructors ---
-        protected AKaleidescapeException(string? message) : base(message) { }
-        protected AKaleidescapeException(string? message, Exception? innerException) : base(message, innerException) { }
-    }
+public class KaleidescapeResponseException : AKaleidescapeException {
 
-    public class KaleidescapeResponseException : AKaleidescapeException {
-
-        //--- Constructors ---
-        public KaleidescapeResponseException(string? message) : base(message) { }
-    }
+    //--- Constructors ---
+    public KaleidescapeResponseException(string? message) : base(message) { }
 }
