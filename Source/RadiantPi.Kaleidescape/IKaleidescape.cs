@@ -25,6 +25,7 @@ public interface IKaleidescape : IDisposable {
 
     //--- Events ---
     event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
+    event EventHandler<UiStateChangedEventArgs>? UiStateChanged;
 
     //--- Methods ---
     Task ConnectAsync();

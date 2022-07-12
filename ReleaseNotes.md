@@ -1,5 +1,20 @@
 # Release Notes
 
+## v2.1 (2022-07-12)
+
+### Features
+
+* Added `UiStateChanged` event triggered by UI_STATE notifications.
+
+### Samples
+
+* Renamed _ShowSelection_ to _ShowEvents_
+    * Display UI state changed events
+
+### Misc.
+
+* Upgraded _Microsoft.Extensions.Logging_ to 6.0.0
+
 
 ## v2.0 (2022-02-15)
 

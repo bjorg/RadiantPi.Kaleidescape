@@ -24,8 +24,8 @@ jobs:
         run: dotnet build --no-restore Source/RadiantPi.Kaleidescape/RadiantPi.Kaleidescape.csproj
 
       # Build Samples
-      - name: Build Show Selection Sample
-        run: dotnet build Samples/ShowSelection/ShowSelection.csproj
+      - name: Build Show Events Sample
+        run: dotnet build Samples/ShowEvents/ShowEvents.csproj
       - name: Build Show MovieDB User Score Sample
         run: dotnet build Samples/ShowMovieDBUserScore/ShowMovieDBUserScore.csproj
 

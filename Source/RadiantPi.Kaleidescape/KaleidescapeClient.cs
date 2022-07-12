@@ -42,6 +42,7 @@ public sealed class KaleidescapeClient : IKaleidescape {
 
     //--- Constants ---
     private static Regex _highlightedSelectionRegex = new(@"^#.+/!/000:HIGHLIGHTED_SELECTION:(?<selectionId>[^:]+):", RegexOptions.Compiled);
+    private static Regex _uiStateRegex = new(@"^#.+/!/000:UI_STATE:(?<screen>[0-9]+):(?<popup>[0-9]+):(?<dialog>[0-9]+):(?<saver>[0-9]+):", RegexOptions.Compiled);
     private static Regex _responseRegex = new("01/(?<sequenceId>[0-9])/000:(?<message>[^:]+):(?<data>.+):/");
 
     //--- Class Fields ---
@@ -126,6 +127,7 @@ public sealed class KaleidescapeClient : IKaleidescape {
 
     //--- Events ---
     public event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
+    public event EventHandler<UiStateChangedEventArgs>? UiStateChanged;
 
     //--- Fields ---
     private readonly ITelnet _telnet;
@@ -302,8 +304,19 @@ public sealed class KaleidescapeClient : IKaleidescape {
         // check if message is a highlighted selection event
         var highlightedSelectionMatch = _highlightedSelectionRegex.Match(args.Message);
         if(highlightedSelectionMatch.Success) {
-            var selectionId = highlightedSelectionMatch.Groups["selectionId"].Value;
-            HighlightedSelectionChanged?.Invoke(this, new(selectionId));
+            HighlightedSelectionChanged?.Invoke(this, new(highlightedSelectionMatch.Groups["selectionId"].Value));
+            return;
+        }
+
+        // check if message is a UI state event
+        var uiStateMatch = _uiStateRegex.Match(args.Message);
+        if(uiStateMatch.Success) {
+            UiStateChanged?.Invoke(this, new(
+                uiStateMatch.Groups["screen"].Value,
+                uiStateMatch.Groups["dialog"].Value,
+                uiStateMatch.Groups["popup"].Value,
+                uiStateMatch.Groups["saver"].Value
+            ));
             return;
         }
     }

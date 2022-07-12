@@ -26,7 +26,7 @@ if(string.IsNullOrEmpty(deviceId)) {
 }
 
 // initialize client
-using KaleidescapeClient client = new(new() {
+using IKaleidescape client = new KaleidescapeClient(new() {
     Host = "192.168.1.147",
     Port = 10000,
     DeviceId = deviceId
@@ -35,7 +35,10 @@ using KaleidescapeClient client = new(new() {
 // hook-up event handlers
 client.HighlightedSelectionChanged += async delegate (object? sender, HighlightedSelectionChangedEventArgs args) {
     var details = await client.GetContentDetailsAsync(args.SelectionId);
-    Console.WriteLine($"=> {details.Title} ({details.Year}) [{args.SelectionId}]");
+    Console.WriteLine($"=> Details: {details.Title} ({details.Year}) [{args.SelectionId}]");
+};
+client.UiStateChanged += async delegate (object? sender, UiStateChangedEventArgs args) {
+    Console.WriteLine($"=> UI: screen={args.Screen}, dialog={args.Dialog}, popup={args.Popup}, saver={args.Saver}");
 };
 
 // connect to device

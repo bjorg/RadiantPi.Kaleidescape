@@ -27,3 +27,20 @@ public sealed class HighlightedSelectionChangedEventArgs : EventArgs {
     //--- Properties ---
     public string SelectionId { get; }
 }
+
+public sealed class UiStateChangedEventArgs : EventArgs {
+
+    //--- Constructors ---
+    public UiStateChangedEventArgs(string screen, string popup, string dialog, string saver) {
+        Screen = screen ?? throw new ArgumentNullException(nameof(screen));
+        Dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
+        Popup = popup ?? throw new ArgumentNullException(nameof(popup));
+        Saver = saver ?? throw new ArgumentNullException(nameof(saver));
+    }
+
+    //--- Properties ---
+    public string Screen { get; }
+    public string Dialog { get; }
+    public string Popup { get; }
+    public string Saver { get; }
+}
