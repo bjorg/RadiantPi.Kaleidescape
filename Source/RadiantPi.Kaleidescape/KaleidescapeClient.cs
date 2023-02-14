@@ -191,7 +191,11 @@ public sealed class KaleidescapeClient : IKaleidescape {
             _telnet.MessageReceived += ReadResponse;
             try {
                 await _telnet.SendAsync($"01/{sequenceId}/GET_CONTENT_DETAILS:{handle}::\r").ConfigureAwait(false);
-                await responseSource.Task.ConfigureAwait(false);
+
+                // wait for response with timeout
+                if(await Task.WhenAny(responseSource.Task, Task.Delay(TimeSpan.FromSeconds(10))).ConfigureAwait(false) != responseSource.Task) {
+                    throw new KaleidescapeResponseException($"Operation timed out");
+                }
             } finally {
                 _telnet.MessageReceived -= ReadResponse;
             }

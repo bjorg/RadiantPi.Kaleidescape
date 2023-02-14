@@ -2,7 +2,9 @@
 
 ## v2.2 (TBD)
 
-> TODO
+### Features
+
+* Added 10 seconds timeout to `GetContentDetailsAsync()` operation.
 
 
 ## v2.1 (2022-07-12)
