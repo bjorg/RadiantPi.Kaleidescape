@@ -41,7 +41,7 @@ client.UiStateChanged += async delegate (object? sender, UiStateChangedEventArgs
     Console.WriteLine($"=> UI State: screen={args.Screen}, dialog={args.Dialog}, popup={args.Popup}, saver={args.Saver}");
 };
 client.MovieLocationChanged += async delegate(object? sender, MovieLocationEventArgs args) {
-    Console.WriteLine($"=> Movie Location: location={args.Location} [{args.LocationDescription}]");
+    Console.WriteLine($"=> Movie Location: location={args.Location}");
 };
 
 // connect to device

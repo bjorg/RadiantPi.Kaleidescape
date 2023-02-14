@@ -53,13 +53,4 @@ public sealed class MovieLocationEventArgs : EventArgs {
 
     //--- Properties ---
     public string Location { get; }
-    public string LocationDescription
-        => Location switch {
-            "00" => "KaleidescapeInterface",
-            "03" => "MovieContent",
-            "04" => "Intermission",
-            "05" => "EndCredits",
-            "06" => "DiscMenu",
-            _ => "Undefined"
-        };
 }
