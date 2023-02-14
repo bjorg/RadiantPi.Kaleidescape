@@ -44,3 +44,22 @@ public sealed class UiStateChangedEventArgs : EventArgs {
     public string Popup { get; }
     public string Saver { get; }
 }
+
+public sealed class MovieLocationEventArgs : EventArgs {
+
+    //--- Constructors ---
+    public MovieLocationEventArgs(string location)
+        => Location = location ?? throw new ArgumentNullException(nameof(location));
+
+    //--- Properties ---
+    public string Location { get; }
+    public string LocationDescription
+        => Location switch {
+            "00" => "KaleidescapeInterface",
+            "03" => "MovieContent",
+            "04" => "Intermission",
+            "05" => "EndCredits",
+            "06" => "DiscMenu",
+            _ => "Undefined"
+        };
+}

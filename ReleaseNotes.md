@@ -4,6 +4,7 @@
 
 ### Features
 
+* Added `MovieLocationChanged` event triggered by MOVIE_LOCATION notification.
 * Added 10 seconds timeout to `GetContentDetailsAsync()` operation.
 
 

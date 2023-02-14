@@ -43,6 +43,7 @@ public sealed class KaleidescapeClient : IKaleidescape {
     //--- Constants ---
     private static Regex _highlightedSelectionRegex = new(@"^#.+/!/000:HIGHLIGHTED_SELECTION:(?<selectionId>[^:]+):", RegexOptions.Compiled);
     private static Regex _uiStateRegex = new(@"^#.+/!/000:UI_STATE:(?<screen>[0-9]+):(?<popup>[0-9]+):(?<dialog>[0-9]+):(?<saver>[0-9]+):", RegexOptions.Compiled);
+    private static Regex _movieLocationRegex = new(@"^#.+/!/000:MOVIE_LOCATION:(?<location>[0-9]+):", RegexOptions.Compiled);
     private static Regex _responseRegex = new("01/(?<sequenceId>[0-9])/000:(?<message>[^:]+):(?<data>.+):/");
 
     //--- Class Fields ---
@@ -128,6 +129,7 @@ public sealed class KaleidescapeClient : IKaleidescape {
     //--- Events ---
     public event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
     public event EventHandler<UiStateChangedEventArgs>? UiStateChanged;
+    public event EventHandler<MovieLocationEventArgs>? MovieLocationChanged;
 
     //--- Fields ---
     private readonly ITelnet _telnet;
@@ -321,6 +323,13 @@ public sealed class KaleidescapeClient : IKaleidescape {
                 uiStateMatch.Groups["popup"].Value,
                 uiStateMatch.Groups["saver"].Value
             ));
+            return;
+        }
+
+        // check if message is a movie location event
+        var movieLocationMatch = _movieLocationRegex.Match(args.Message);
+        if(movieLocationMatch.Success) {
+            MovieLocationChanged?.Invoke(this, new(movieLocationMatch.Groups["location"].Value));
             return;
         }
     }
