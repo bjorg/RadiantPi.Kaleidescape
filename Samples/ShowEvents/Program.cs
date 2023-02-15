@@ -1,6 +1,6 @@
 ﻿/*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2022 - Steve G. Bjorg
+ * Copyright (C) 2020-2023 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -26,7 +26,7 @@ if(string.IsNullOrEmpty(deviceId)) {
 }
 
 // initialize client
-using KaleidescapeClient client = new(new() {
+using IKaleidescape client = new KaleidescapeClient(new() {
     Host = "192.168.1.147",
     Port = 10000,
     DeviceId = deviceId
@@ -35,7 +35,13 @@ using KaleidescapeClient client = new(new() {
 // hook-up event handlers
 client.HighlightedSelectionChanged += async delegate (object? sender, HighlightedSelectionChangedEventArgs args) {
     var details = await client.GetContentDetailsAsync(args.SelectionId);
-    Console.WriteLine($"=> {details.Title} ({details.Year}) [{args.SelectionId}]");
+    Console.WriteLine($"=> Movie Details: {details.Title} ({details.Year}) [{args.SelectionId}]");
+};
+client.UiStateChanged += async delegate (object? sender, UiStateChangedEventArgs args) {
+    Console.WriteLine($"=> UI State: screen={args.Screen}, dialog={args.Dialog}, popup={args.Popup}, saver={args.Saver}");
+};
+client.MovieLocationChanged += async delegate(object? sender, MovieLocationEventArgs args) {
+    Console.WriteLine($"=> Movie Location: location={args.Location}");
 };
 
 // connect to device

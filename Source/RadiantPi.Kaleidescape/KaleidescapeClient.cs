@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2022 - Steve G. Bjorg
+ * Copyright (C) 2020-2023 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -42,6 +42,8 @@ public sealed class KaleidescapeClient : IKaleidescape {
 
     //--- Constants ---
     private static Regex _highlightedSelectionRegex = new(@"^#.+/!/000:HIGHLIGHTED_SELECTION:(?<selectionId>[^:]+):", RegexOptions.Compiled);
+    private static Regex _uiStateRegex = new(@"^#.+/!/000:UI_STATE:(?<screen>[0-9]+):(?<popup>[0-9]+):(?<dialog>[0-9]+):(?<saver>[0-9]+):", RegexOptions.Compiled);
+    private static Regex _movieLocationRegex = new(@"^#.+/!/000:MOVIE_LOCATION:(?<location>[0-9]+):", RegexOptions.Compiled);
     private static Regex _responseRegex = new("01/(?<sequenceId>[0-9])/000:(?<message>[^:]+):(?<data>.+):/");
 
     //--- Class Fields ---
@@ -126,6 +128,8 @@ public sealed class KaleidescapeClient : IKaleidescape {
 
     //--- Events ---
     public event EventHandler<HighlightedSelectionChangedEventArgs>? HighlightedSelectionChanged;
+    public event EventHandler<UiStateChangedEventArgs>? UiStateChanged;
+    public event EventHandler<MovieLocationEventArgs>? MovieLocationChanged;
 
     //--- Fields ---
     private readonly ITelnet _telnet;
@@ -189,7 +193,11 @@ public sealed class KaleidescapeClient : IKaleidescape {
             _telnet.MessageReceived += ReadResponse;
             try {
                 await _telnet.SendAsync($"01/{sequenceId}/GET_CONTENT_DETAILS:{handle}::\r").ConfigureAwait(false);
-                await responseSource.Task.ConfigureAwait(false);
+
+                // wait for response with timeout
+                if(await Task.WhenAny(responseSource.Task, Task.Delay(TimeSpan.FromSeconds(10))).ConfigureAwait(false) != responseSource.Task) {
+                    throw new KaleidescapeResponseException($"Operation timed out");
+                }
             } finally {
                 _telnet.MessageReceived -= ReadResponse;
             }
@@ -302,8 +310,26 @@ public sealed class KaleidescapeClient : IKaleidescape {
         // check if message is a highlighted selection event
         var highlightedSelectionMatch = _highlightedSelectionRegex.Match(args.Message);
         if(highlightedSelectionMatch.Success) {
-            var selectionId = highlightedSelectionMatch.Groups["selectionId"].Value;
-            HighlightedSelectionChanged?.Invoke(this, new(selectionId));
+            HighlightedSelectionChanged?.Invoke(this, new(highlightedSelectionMatch.Groups["selectionId"].Value));
+            return;
+        }
+
+        // check if message is a UI state event
+        var uiStateMatch = _uiStateRegex.Match(args.Message);
+        if(uiStateMatch.Success) {
+            UiStateChanged?.Invoke(this, new(
+                uiStateMatch.Groups["screen"].Value,
+                uiStateMatch.Groups["dialog"].Value,
+                uiStateMatch.Groups["popup"].Value,
+                uiStateMatch.Groups["saver"].Value
+            ));
+            return;
+        }
+
+        // check if message is a movie location event
+        var movieLocationMatch = _movieLocationRegex.Match(args.Message);
+        if(movieLocationMatch.Success) {
+            MovieLocationChanged?.Invoke(this, new(movieLocationMatch.Groups["location"].Value));
             return;
         }
     }

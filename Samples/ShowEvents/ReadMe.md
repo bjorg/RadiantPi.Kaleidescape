@@ -1,6 +1,6 @@
-# RadiantPi.Kaleidescape - ShowSelection
+# RadiantPi.Kaleidescape - Events
 
-Show movie details for highlighted selection.
+Show events received by Kaleidescape player.
 
 ## Code
 
@@ -25,7 +25,13 @@ using KaleidescapeClient client = new(new() {
 // hook-up event handlers
 client.HighlightedSelectionChanged += async delegate (object? sender, HighlightedSelectionChangedEventArgs args) {
     var details = await client.GetContentDetailsAsync(args.SelectionId);
-    Console.WriteLine($"=> {details.Title} ({details.Year}) [{args.SelectionId}]");
+    Console.WriteLine($"=> Movie Details: {details.Title} ({details.Year}) [{args.SelectionId}]");
+};
+client.UiStateChanged += async delegate (object? sender, UiStateChangedEventArgs args) {
+    Console.WriteLine($"=> UI State: screen={args.Screen}, dialog={args.Dialog}, popup={args.Popup}, saver={args.Saver}");
+};
+client.MovieLocationChanged += async delegate(object? sender, MovieLocationEventArgs args) {
+    Console.WriteLine($"=> Movie Location: location={args.Location}");
 };
 
 // connect to device

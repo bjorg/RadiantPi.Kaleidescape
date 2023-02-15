@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Kaleidescape - Communication client for Kaleidescape
- * Copyright (C) 2020-2022 - Steve G. Bjorg
+ * Copyright (C) 2020-2023 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -26,4 +26,31 @@ public sealed class HighlightedSelectionChangedEventArgs : EventArgs {
 
     //--- Properties ---
     public string SelectionId { get; }
+}
+
+public sealed class UiStateChangedEventArgs : EventArgs {
+
+    //--- Constructors ---
+    public UiStateChangedEventArgs(string screen, string popup, string dialog, string saver) {
+        Screen = screen ?? throw new ArgumentNullException(nameof(screen));
+        Dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
+        Popup = popup ?? throw new ArgumentNullException(nameof(popup));
+        Saver = saver ?? throw new ArgumentNullException(nameof(saver));
+    }
+
+    //--- Properties ---
+    public string Screen { get; }
+    public string Dialog { get; }
+    public string Popup { get; }
+    public string Saver { get; }
+}
+
+public sealed class MovieLocationEventArgs : EventArgs {
+
+    //--- Constructors ---
+    public MovieLocationEventArgs(string location)
+        => Location = location ?? throw new ArgumentNullException(nameof(location));
+
+    //--- Properties ---
+    public string Location { get; }
 }
