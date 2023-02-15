@@ -1,6 +1,6 @@
 # Release Notes
 
-## v2.2 (TBD)
+## v2.2 (2023-02-14)
 
 ### Features
 
